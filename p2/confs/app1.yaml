@@ -1,0 +1,40 @@
+# Le YAML est un format de données lisible par l'homme. L'indentation
+# (2 espaces sont une bonne convention) est cruciale et définit la structure.
+
+# --- Section 1 : Le Deployment (le promoteur immobilier) ---
+apiVersion: apps/v1  # Version de l'API Kubernetes pour les déploiements
+kind: Deployment     # Type d'objet : un Deployment
+metadata:
+  name: app1-deployment # Nom unique pour cet objet Deployment
+spec: # La spécification, c'est-à-dire ce que nous voulons.
+  replicas: 1 # Nous voulons exactement UNE copie de notre application.
+  selector:
+    matchLabels:
+      app: app1 # Ce Deployment gère tous les Pods qui ont cette étiquette.
+  template: # C'est le "modèle" pour créer les Pods.
+    metadata:
+      labels:
+        app: app1 # On colle cette étiquette sur chaque Pod créé.
+    spec:
+      containers:
+      - name: app1-container # Nom du conteneur à l'intérieur du Pod.
+        # L'image Docker à utiliser. C'est le "plan" de notre application.
+        image: nginxdemos/hello:plain-text 
+        ports:
+        # On déclare que ce conteneur expose un service sur le port 80.
+        - containerPort: 80
+
+--- # Le '---' est un séparateur. Il permet de définir plusieurs objets dans un seul fichier.
+
+# --- Section 2 : Le Service (l'adresse postale) ---
+apiVersion: v1 # Version de l'API pour les services.
+kind: Service
+metadata:
+  name: app1-service # Nom unique pour cet objet Service.
+spec:
+  selector:
+    app: app1 # Ce Service va chercher tous les Pods avec l'étiquette 'app: app1'.
+  ports:
+  - protocol: TCP
+    port: 80       # Ce service sera joignable sur le port 80 (à l'intérieur du cluster).
+    targetPort: 80 # Il redirigera le trafic vers le port 80 des Pods ciblés.

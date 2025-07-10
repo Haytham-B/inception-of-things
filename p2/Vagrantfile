@@ -1,0 +1,45 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/debian12"
+  config.vm.box_check_update = true
+  
+  # On synchronise notre dossier 'confs' local dans /vagrant/confs dans la VM.
+  # C'est là que nos manifestes .yaml seront accessibles pour être appliqués.
+  config.vm.synced_folder "confs", "/vagrant/confs", type: "9p"
+
+  config.vm.define "k3s-server" do |server|
+    server.vm.hostname = "hboukhorS" # <--- METTEZ VOTRE LOGIN
+    server.vm.network "private_network", ip: "192.168.56.110"
+    
+    server.vm.provider "libvirt" do |lv|
+      # On donne un peu plus de RAM car la machine fera tout tourner
+      lv.memory = 2048 
+      lv.cpus = 2
+    end
+
+    # On installe K3s et on applique les manifestes avec un script inline
+    server.vm.provision "shell", inline: <<-SHELL
+      set -ex
+      IP_SERVER="192.168.56.110"
+      
+      echo "===== Installation de K3s Server ====="
+      curl -sfL https://get.k3s.io | INSTALL_K3S_EXEC="--node-ip=${IP_SERVER} --flannel-iface=eth1" sh -
+      
+      echo "===== Configuration de kubectl ====="
+      mkdir -p /home/vagrant/.kube
+      cp /etc/rancher/k3s/k3s.yaml /home/vagrant/.kube/config
+      chown vagrant:vagrant -R /home/vagrant/.kube
+      chmod 600 /home/vagrant/.kube/config
+
+      echo "===== Application des manifestes Kubernetes ====="
+      # On attend que K3s soit prêt avant d'appliquer les configurations
+      sleep 20
+      # On dit à kubectl d'appliquer TOUS les fichiers .yaml trouvés dans le dossier partagé.
+      # `sudo -u vagrant` est utilisé pour s'assurer que kubectl est exécuté par
+      # l'utilisateur qui a accès au fichier de configuration copié.
+      kubectl apply -f /vagrant/confs/
+    SHELL
+  end
+end

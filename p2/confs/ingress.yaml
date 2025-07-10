@@ -1,0 +1,46 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: main-ingress # Nom de notre objet Ingress.
+spec:
+  rules:
+  # --- Première Règle ---
+  - host: "app1.com" # SI l'en-tête Host de la requête HTTP est "app1.com"...
+    http:
+      paths:
+      - path: / # ...ET que le chemin est "/" (ou commence par /)...
+        pathType: Prefix
+        backend:
+          service:
+            # ...ALORS, redirige le trafic vers le Service nommé "app1-service".
+            name: app1-service 
+            port:
+              number: 80 # Sur son port 80.
+  
+  # --- Deuxième Règle ---
+  - host: "app2.com" # SI l'en-tête Host est "app2.com"...
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            # ...ALORS, redirige vers le Service "app2-service".
+            name: app2-service
+            port:
+              number: 80
+
+  # --- Règle par Défaut ---
+  # Il n'y a PAS de `host:` ici. Cela signifie que cette règle s'applique
+  # à TOUT le trafic qui n'a pas correspondu aux règles précédentes.
+  # C'est notre "catch-all" ou règle par défaut.
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            # ...ALORS, redirige vers le Service "app3-service".
+            name: app3-service
+            port:
+              number: 80

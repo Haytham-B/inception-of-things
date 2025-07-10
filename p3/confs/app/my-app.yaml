@@ -1,0 +1,53 @@
+# Fichier : p3/confs/app/my-app.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-playground-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: playground
+  template:
+    metadata:
+      labels:
+        app: playground
+    spec:
+      containers:
+      - name: playground-container
+        # On commence avec la version v1 de l'application
+        image: wil42/playground:v1
+        ports:
+        - containerPort: 8888
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: playground-service
+spec:
+  selector:
+    app: playground
+  ports:
+  - protocol: TCP
+    # Le service écoute sur le port 80
+    port: 80
+    # et redirige vers le port 8888 du conteneur
+    targetPort: 8888
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: playground-ingress
+spec:
+  # Pas de 'host' spécifié, donc cette règle s'applique à tout le trafic
+  # arrivant sur le load balancer du cluster.
+  rules:
+  - http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: playground-service
+            port:
+              number: 80

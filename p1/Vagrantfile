@@ -1,0 +1,28 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "generic/debian12"
+  config.vm.box_check_update = true
+  config.vm.synced_folder ".", "/vagrant", type: "9p"
+
+  config.vm.define "k3s-master" do |master|
+    master.vm.hostname = "hboukhorS"
+    master.vm.network "private_network", ip: "192.168.56.110", libvirt__network_name: "iot-net"
+    master.vm.provider "libvirt" do |lv|
+      lv.memory = 1024
+      lv.cpus = 1
+    end
+    master.vm.provision "shell", path: "scripts/install_master.sh"
+  end
+
+  config.vm.define "k3s-worker" do |worker|
+    worker.vm.hostname = "hboukhorSW"
+    worker.vm.network "private_network", ip: "192.168.56.111", libvirt__network_name: "iot-net"
+    worker.vm.provider "libvirt" do |lv|
+      lv.memory = 512
+      lv.cpus = 1
+    end
+    worker.vm.provision "shell", path: "scripts/install_worker.sh", args: ["192.168.56.110", "192.168.56.111"]
+  end
+end
