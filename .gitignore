@@ -1,0 +1,13 @@
+# Dossiers et fichiers générés par Vagrant
+.vagrant/
+/p1/node-token
+
+# Fichiers de log et temporaires
+*.log
+*.swp
+*~
+.DS_Store
+/p3/scripts/server.log
+
+# Fichiers de confs locaux (non nécessaires pour ce projet, mais bonne pratique)
+.env
